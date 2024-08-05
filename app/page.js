@@ -2,12 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState, useRef } from "react";
-import { Box, Button, Modal, Stack, TextField, Typography, Grid, Container, Paper, IconButton } from "@mui/material";
+import { Box, Button, Modal, Stack, TextField, Typography, Grid, Container, Paper, IconButton, Tooltip } from "@mui/material";
 import { collection, query, getDocs, getDoc, setDoc, doc, deleteDoc } from "firebase/firestore";
 import { firestore } from "./firebase";
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import SwitchCameraIcon from '@mui/icons-material/SwitchCamera';
 import { OpenAI } from "openai";
 import dotenv from "dotenv";
 import { Camera } from "react-camera-pro";
@@ -272,6 +273,12 @@ export default function Home() {
     testOpenAI(resizedPhoto);
   };
 
+  const switchCamera = () => {
+    if (camera.current) {
+      camera.current.switchCamera();
+    }
+  };
+
   return (
       <RequireAuth>
         <Container sx={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 2 }}>
@@ -341,10 +348,16 @@ export default function Home() {
           <Modal open={cameraModalOpen} onClose={handleCameraClose}>
             <Box sx={reactCamStyle}>
               <Camera ref={camera} />
-              <Button variant="contained" color="primary" onClick={takePhoto}>
-                Take photo
-              </Button>
-              {image && <img src={`data:image/jpeg;base64,${image}`} alt='Taken photo' style={{ marginTop: '20px', borderRadius: '8px', maxWidth: '100%' }} />}
+              <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+                <Button variant="contained" color="primary" onClick={takePhoto}>
+                  Take photo
+                </Button>
+                <Tooltip title="Switch Camera">
+                  <IconButton color="primary" onClick={switchCamera}>
+                    <SwitchCameraIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Box>
           </Modal>
         </Container>
