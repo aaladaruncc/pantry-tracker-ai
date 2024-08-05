@@ -178,16 +178,17 @@ export default function Home() {
     setResponse(response.choices[0].message.content);
     console.log(response.choices[0]);
 
-    const itemData = parseJson(response.choices[0].message.content)
-    if (itemData) {
-      for (const key of Object.keys(itemData)) {
+    const itemData = extractJsonString(response.choices[0].message.content)
+    const itemJson = parseJsonData(itemData);
+    if (itemJson) {
+      for (const key of Object.keys(itemJson)) {
         const docRef = doc(firestore, 'users', user.uid, 'pantry', key);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const { count } = docSnap.data();
-          await setDoc(docRef, { count: count + itemData[key] });
+          await setDoc(docRef, { count: count + itemJson[key] });
         } else {
-          await setDoc(docRef, { count: itemData[key] });
+          await setDoc(docRef, { count: itemJson[key] });
         }
       }
       await updatePantry();
