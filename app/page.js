@@ -1,5 +1,4 @@
 "use client";
-
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState, useRef } from "react";
 import { Box, Button, Modal, Stack, TextField, Typography, Grid, Container, Paper, IconButton, Tooltip } from "@mui/material";
@@ -51,6 +50,9 @@ export default function Home() {
   const handleTextInputChange = event => {
     setTextInput(event.target.value);
   };
+
+  //create a function to fetch data from firebase
+
 
   const updatePantry = async () => {
     if (!user) return;
@@ -229,13 +231,18 @@ export default function Home() {
       if (recipeData) {
         const recipeName = Object.keys(recipeData)[0];
         const docRef = doc(firestore, 'users', user.uid, 'recipes', recipeName);
-        await setDoc(docRef, recipeData[recipeName]);
+        await setDoc(docRef, {
+          ...recipeData[recipeName],
+          createdAt: new Date() // Add the createdAt field with the current timestamp
+        });
+        router.push('/recipes');
       }
 
     } catch (error) {
       console.error("Error generating recipe:", error);
     }
   };
+
 
   const resizeImage = (base64Str, maxWidth = 400, maxHeight = 400) => {
     return new Promise((resolve) => {
