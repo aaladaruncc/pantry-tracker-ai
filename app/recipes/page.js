@@ -2,7 +2,7 @@
 
 import RequireAuth from '../auth/RequireAuth';
 import { useContext, useEffect, useState } from "react";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { firestore } from "../firebase";
 import AuthContext from "../auth/AuthContext";
 import { Box, Typography, Button, Card, CardContent, CardActions, List, ListItem, ListItemText, Divider, Collapse, IconButton, Paper } from '@mui/material';
@@ -21,7 +21,8 @@ const Recipes = () => {
 
         const fetchRecipes = async () => {
             const recipesCollection = collection(firestore, 'users', user.uid, 'recipes');
-            const recipesSnapshot = await getDocs(recipesCollection);
+            const recipesQuery = query(recipesCollection, orderBy('createdAt', 'desc')); // Order by 'createdAt' field in descending order
+            const recipesSnapshot = await getDocs(recipesQuery);
             const recipesList = recipesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setRecipes(recipesList);
         };
@@ -31,6 +32,11 @@ const Recipes = () => {
 
     const handleExpandClick = (id) => {
         setExpanded(expanded === id ? null : id);
+    };
+
+    const formatDate = (timestamp) => {
+        const date = new Date(timestamp.seconds * 1000);
+        return date.toLocaleDateString();
     };
 
     return (
@@ -46,8 +52,10 @@ const Recipes = () => {
                                 <Typography variant="h5" component="h2" gutterBottom>
                                     {
                                         recipe.id.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase())
-
                                     }
+                                </Typography>
+                                <Typography variant="subtitle1" color="textSecondary" gutterBottom>
+                                    Created on: {formatDate(recipe.createdAt)}
                                 </Typography>
                                 <CardActions disableSpacing>
                                     <Button onClick={() => handleExpandClick(recipe.id)} variant="outlined" color="primary">
