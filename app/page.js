@@ -2,10 +2,12 @@
 
 import { useRouter } from 'next/navigation';
 import { useContext, useEffect, useState, useRef } from "react";
-import { Box, Button, Modal, Stack, TextField, Typography } from "@mui/material";
+import { Box, Button, Modal, Stack, TextField, Typography, Grid, Container, Paper, IconButton } from "@mui/material";
 import { collection, query, getDocs, getDoc, setDoc, doc, deleteDoc } from "firebase/firestore";
 import { firestore } from "./firebase";
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import { OpenAI } from "openai";
 import dotenv from "dotenv";
 import { Camera } from "react-camera-pro";
@@ -21,29 +23,22 @@ const style = {
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
-  width: 400,
+  width: '90vw',
+  maxWidth: 400,
   bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
+  borderRadius: '8px',
+  boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
   p: 4,
 };
 
 const reactCamStyle = {
-  position: 'absolute',
-  top: '50%',
-  left: '50%',
-  transform: 'translate(-50%, -50%)',
-  width: 400,
-  bgcolor: 'background.paper',
-  border: '2px solid #000',
-  boxShadow: 24,
-  p: 4,
+  ...style,
   height: 400
 };
 
 export default function Home() {
-  const router = useRouter(); // Ensure useRouter is used in a client component
-  const { user, logout } = useContext(AuthContext); // Get the current user and logout function
+  const router = useRouter();
+  const { user, logout } = useContext(AuthContext);
   const [pantry, setPantry] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [textInput, setTextInput] = useState('');
@@ -279,10 +274,55 @@ export default function Home() {
 
   return (
       <RequireAuth>
-        <Box width="100vw" height="100vh" display="flex" justifyContent="center" alignItems="center" flexDirection="column" gap={2}>
-          <Button variant="contained" onClick={logout}>
-            Logout
-          </Button>
+        <Container sx={{ height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', p: 2 }}>
+          <Box width="100%" display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h4" color="primary">
+              My Pantry
+            </Typography>
+            <Button variant="contained" color="secondary" onClick={logout}>
+              Logout
+            </Button>
+          </Box>
+          <Box flex="1" overflow="auto" mt={2}>
+            <Paper elevation={3} style={{ padding: '20px', borderRadius: '8px' }}>
+              <Typography variant="h4" color="textPrimary" fontWeight="bold" align="center" gutterBottom>
+                Pantry
+              </Typography>
+              <Grid container spacing={2}>
+                {pantry.map(({ name, count }) => (
+                    <Grid item xs={12} sm={6} md={4} key={name}>
+                      <Paper elevation={1} style={{ padding: '10px', borderRadius: '8px', textAlign: 'center', background: '#f5f5f5' }}>
+                        <Typography variant="h6" color="textPrimary">
+                          {name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' ')}
+                        </Typography>
+                        <Typography variant="body1" color="textSecondary">
+                          {count}
+                        </Typography>
+                        <IconButton color="secondary" onClick={() => deleteDocFirestore(name)}>
+                          <DeleteIcon />
+                        </IconButton>
+                      </Paper>
+                    </Grid>
+                ))}
+              </Grid>
+            </Paper>
+          </Box>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mt={2}>
+            <Button variant="contained" color="primary" onClick={generateRecipe}>
+              Generate Recipe
+            </Button>
+            <Box display="flex" gap={2}>
+              <IconButton color="primary" onClick={handleOpen}>
+                <AddCircleIcon style={{ fontSize: 40 }} />
+              </IconButton>
+              <IconButton color="primary" onClick={handleCameraOpen}>
+                <CameraAltIcon style={{ fontSize: 40 }} />
+              </IconButton>
+            </Box>
+            <Button variant="contained" color="secondary" onClick={() => router.push('/recipes')}>
+              View Recipes
+            </Button>
+          </Box>
           <Modal open={openModal} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
             <Box sx={style}>
               <Stack spacing={2} direction="column" justifyContent="center" alignItems="center">
@@ -291,76 +331,23 @@ export default function Home() {
                 </Typography>
                 <Stack spacing={2} direction="row" justifyContent="center" alignItems="center">
                   <TextField id="outlined-basic" label="Item" variant="outlined" value={textInput} onChange={handleTextInputChange} />
-                  <Button variant="contained" onClick={updateFirestore}>
+                  <Button variant="contained" color="primary" onClick={updateFirestore}>
                     Add
                   </Button>
                 </Stack>
               </Stack>
             </Box>
           </Modal>
-          <Button variant="contained" onClick={handleOpen}>
-            Add
-          </Button>
-          <Button variant="outlined" onClick={handleCameraOpen}>
-            Camera
-          </Button>
           <Modal open={cameraModalOpen} onClose={handleCameraClose}>
             <Box sx={reactCamStyle}>
               <Camera ref={camera} />
-              <Button variant="contained" onClick={takePhoto}>
+              <Button variant="contained" color="primary" onClick={takePhoto}>
                 Take photo
               </Button>
-              {image && <img src={`data:image/jpeg;base64,${image}`} alt='Taken photo' />}
+              {image && <img src={`data:image/jpeg;base64,${image}`} alt='Taken photo' style={{ marginTop: '20px', borderRadius: '8px', maxWidth: '100%' }} />}
             </Box>
           </Modal>
-          <Box border={3}>
-            <Box width="600px" height="100px">
-              <Box bgcolor="#B0E0E6" width="100%" height="100%">
-                <Typography variant="h3" color="primary" fontWeight={100} align="center">
-                  Pantry
-                </Typography>
-              </Box>
-            </Box>
-            <Stack width="600px" height="500px" spacing={2} overflow="auto">
-              {pantry.map(({ name, count }) => (
-                  <Box key={name} bgcolor="lightgray" color="black" p={2} textAlign="center" fontSize="2rem">
-                    <Stack direction="row" justifyContent="center" alignItems="center" spacing={6}>
-                      <Typography variant="h4" color="primary" fontWeight={100} align="center">
-                        {
-                            name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' ')
-                        }
-                      </Typography>
-                      <Typography variant="h4" color="primary" fontWeight={100} align="center">
-                        {count}
-                      </Typography>
-                      <Button variant="contained" onClick={() => deleteDocFirestore(name)} startIcon={<DeleteIcon />}>
-                        Delete
-                      </Button>
-                    </Stack>
-                  </Box>
-              ))}
-            </Stack>
-          </Box>
-          <Stack
-              direction="row"
-              justifyContent="center"
-              alignItems="center"
-              spacing={2}
-          >
-            <Button
-                variant="contained"
-                onClick={generateRecipe}
-            >
-              Generate Recipe
-            </Button>
-            <Button
-                variant="contained"
-                onClick={() => router.push('/recipes')}
-            >
-              View Recipes
-            </Button>
-          </Stack>
-        </Box>
+        </Container>
       </RequireAuth>
   );
 }
