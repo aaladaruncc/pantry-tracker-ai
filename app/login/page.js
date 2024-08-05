@@ -25,7 +25,7 @@ export default function Login() {
     };
 
     const switchToSignUp = () => {
-        router.push('/sign-up');
+        router.push('/signup');
     };
 
     return (
