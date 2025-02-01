@@ -3,6 +3,7 @@
 import { useState, useContext } from 'react';
 import { Box, Button, TextField, Typography, Container, Stack } from '@mui/material';
 import AuthContext from '../auth/AuthContext';
+import {useRouter} from "next/navigation";
 
 export default function Signup() {
     const [email, setEmail] = useState('');
@@ -10,6 +11,7 @@ export default function Signup() {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const { signup } = useContext(AuthContext);
+    const router = useRouter();
 
     const handleSignup = async (event) => {
         event.preventDefault();
@@ -18,9 +20,10 @@ export default function Signup() {
 
         try {
             await signup(email, password);
-            setSuccess('User registered successfully');
+            router.push("/")
         } catch (error) {
             setError(error.message);
+            cosole.log(error.message);
         }
     };
 
